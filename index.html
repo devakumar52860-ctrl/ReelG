@@ -1,0 +1,59 @@
+
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReelG</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f4f4f4;font-family:Arial,sans-serif}
+header{background:#fff;padding:16px;font-size:26px;font-weight:bold;color:#e1306c;position:sticky;top:0}
+nav{display:flex;justify-content:space-around;background:white;padding:12px;position:sticky;top:58px}
+nav button{border:0;background:white;font-size:22px}
+.container{max-width:500px;margin:auto}
+.story{background:white;padding:15px;display:flex;gap:14px;overflow:auto}
+.circle{min-width:60px;height:60px;border-radius:50%;background:linear-gradient(45deg,#ff9900,#e1306c,#a020f0);display:flex;align-items:center;justify-content:center;color:white;font-weight:bold}
+.post{background:white;margin:12px 0}
+.posthead{padding:12px;font-weight:bold}
+.post img{width:100%;display:block}
+.actions{padding:12px;font-size:24px}
+.caption{padding:0 12px 15px}
+.upload{background:white;padding:15px;margin:12px}
+input,button{padding:10px}
+</style>
+</head>
+<body>
+<header>ReelG</header>
+<nav>
+<button onclick="home()">🏠</button>
+<button onclick="upload()">➕</button>
+<button onclick="alert('ReelG Reels जल्द आएंगे!')">🎬</button>
+<button onclick="alert('आपकी प्रोफाइल')">👤</button>
+</nav>
+<div class="container" id="app">
+<div class="story">
+<div class="circle">Your</div>
+<div class="circle">Story</div>
+<div class="circle">ReelG</div>
+<div class="circle">Friends</div>
+</div>
+<div id="posts"></div>
+</div>
+<script>
+function home(){
+document.getElementById('app').innerHTML='<div class="story"><div class="circle">Your</div><div class="circle">Story</div><div class="circle">ReelG</div></div><div id="posts"></div>';
+}
+function upload(){
+document.getElementById('app').innerHTML='<div class="upload"><h2>नई पोस्ट डालें</h2><input type="file" id="photo" accept="image/*"><br><br><input id="caption" placeholder="कुछ लिखें..."><br><br><button onclick="publish()">पोस्ट करें</button><button onclick="home()">वापस</button></div>';
+}
+function publish(){
+let file=document.getElementById('photo').files[0];
+if(!file){alert('पहले फोटो चुनें');return}
+let url=URL.createObjectURL(file);
+let cap=document.getElementById('caption').value;
+document.getElementById('app').innerHTML='<div class="post"><div class="posthead">ReelG User</div><img src="'+url+'"><div class="caption">❤️ '+cap+'</div></div><button onclick="home()">Home</button>';
+}
+</script>
+</body>
+</html>
