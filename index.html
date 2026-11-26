@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="hi">
 <head>
@@ -7,53 +6,141 @@
 <title>ReelG</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#f4f4f4;font-family:Arial,sans-serif}
-header{background:#fff;padding:16px;font-size:26px;font-weight:bold;color:#e1306c;position:sticky;top:0}
-nav{display:flex;justify-content:space-around;background:white;padding:12px;position:sticky;top:58px}
-nav button{border:0;background:white;font-size:22px}
-.container{max-width:500px;margin:auto}
-.story{background:white;padding:15px;display:flex;gap:14px;overflow:auto}
-.circle{min-width:60px;height:60px;border-radius:50%;background:linear-gradient(45deg,#ff9900,#e1306c,#a020f0);display:flex;align-items:center;justify-content:center;color:white;font-weight:bold}
-.post{background:white;margin:12px 0}
-.posthead{padding:12px;font-weight:bold}
-.post img{width:100%;display:block}
-.actions{padding:12px;font-size:24px}
-.caption{padding:0 12px 15px}
-.upload{background:white;padding:15px;margin:12px}
-input,button{padding:10px}
+body{margin:0;background:#f4f4f4;font-family:Arial,sans-serif;color:#222}
+header{background:white;padding:18px;font-size:30px;font-weight:bold;color:#e1306c}
+nav{display:flex;justify-content:space-around;background:white;padding:14px;position:sticky;top:0;z-index:5}
+nav button{border:0;background:white;font-size:25px;cursor:pointer}
+.container{max-width:600px;margin:auto}
+.stories{display:flex;gap:12px;overflow:auto;background:white;padding:16px}
+.story{min-width:75px;height:75px;border-radius:50%;background:linear-gradient(45deg,#ff9800,#e1306c,#a100ff);display:flex;align-items:center;justify-content:center;color:white;font-weight:bold}
+.post{background:white;margin:14px 0}
+.posthead{padding:14px;font-weight:bold}
+.post img{width:100%;display:block;max-height:600px;object-fit:contain;background:#eee}
+.actions{padding:12px;font-size:26px}
+.actions button{border:0;background:white;font-size:25px;cursor:pointer}
+.caption{padding:0 15px 15px}
+.comments{padding:0 15px 10px}
+.commentinput{display:flex;padding:10px}
+.commentinput input{flex:1;padding:10px;border:1px solid #ddd;border-radius:20px}
+.commentinput button{border:0;background:#e1306c;color:white;border-radius:20px;padding:10px}
+.upload{background:white;padding:18px;margin:15px}
+.upload input,.upload button{margin:8px 0;padding:12px;width:100%}
+.hidden{display:none}
 </style>
 </head>
 <body>
 <header>ReelG</header>
 <nav>
 <button onclick="home()">🏠</button>
-<button onclick="upload()">➕</button>
-<button onclick="alert('ReelG Reels जल्द आएंगे!')">🎬</button>
-<button onclick="alert('आपकी प्रोफाइल')">👤</button>
+<button onclick="uploadBox()">➕</button>
+<button onclick="reels()">🎬</button>
+<button onclick="profile()">👤</button>
 </nav>
-<div class="container" id="app">
-<div class="story">
-<div class="circle">Your</div>
-<div class="circle">Story</div>
-<div class="circle">ReelG</div>
-<div class="circle">Friends</div>
+
+<div class="container">
+<div class="stories">
+<div class="story">Your</div>
+<div class="story">Story</div>
+<div class="story">ReelG</div>
+<div class="story">Friends</div>
 </div>
-<div id="posts"></div>
+
+<div id="upload" class="upload hidden">
+<h3>नई पोस्ट बनाएं</h3>
+<input id="photo" type="file" accept="image/*">
+<input id="captionInput" placeholder="Caption लिखें...">
+<button onclick="addPost()">पोस्ट करें</button>
 </div>
+
+<div id="feed"></div>
+</div>
+
 <script>
+let posts=JSON.parse(localStorage.getItem("reelgPosts")||"[]");
+
+function save(){
+ localStorage.setItem("reelgPosts",JSON.stringify(posts));
+}
+
+function render(){
+ let feed=document.getElementById("feed");
+ feed.innerHTML="";
+ posts.forEach((p,i)=>{
+ let div=document.createElement("div");
+ div.className="post";
+ div.innerHTML=`
+ <div class="posthead">ReelG User</div>
+ <img src="${p.img}">
+ <div class="actions">
+ <button onclick="like(${i})">${p.liked?"❤️":"🤍"}</button>
+ <button onclick="focusComment(${i})">💬</button>
+ </div>
+ <div class="caption"><b>ReelG User</b> ${escapeHTML(p.caption)}</div>
+ <div class="comments">${p.comments.map(c=>"<div><b>ReelG User</b> "+escapeHTML(c)+"</div>").join("")}</div>
+ <div class="commentinput">
+ <input id="comment${i}" placeholder="Comment लिखें...">
+ <button onclick="comment(${i})">Send</button>
+ </div>`;
+ feed.appendChild(div);
+ });
+}
+
+function escapeHTML(s){
+ return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+function addPost(){
+ let file=document.getElementById("photo").files[0];
+ let caption=document.getElementById("captionInput").value;
+ if(!file){alert("पहले फोटो चुनें");return}
+ let reader=new FileReader();
+ reader.onload=function(){
+ posts.unshift({img:reader.result,caption:caption,liked:false,comments:[]});
+ save();render();
+ document.getElementById("upload").classList.add("hidden");
+ document.getElementById("photo").value="";
+ document.getElementById("captionInput").value="";
+ };
+ reader.readAsDataURL(file);
+}
+
+function like(i){
+ posts[i].liked=!posts[i].liked;
+ save();render();
+}
+
+function comment(i){
+ let input=document.getElementById("comment"+i);
+ if(input.value.trim()){
+ posts[i].comments.push(input.value.trim());
+ save();render();
+ }
+}
+
+function focusComment(i){
+ document.getElementById("comment"+i).focus();
+}
+
+function uploadBox(){
+ document.getElementById("upload").classList.remove("hidden");
+ window.scrollTo(0,0);
+}
+
 function home(){
-document.getElementById('app').innerHTML='<div class="story"><div class="circle">Your</div><div class="circle">Story</div><div class="circle">ReelG</div></div><div id="posts"></div>';
+ document.getElementById("upload").classList.add("hidden");
+ render();
+ window.scrollTo(0,0);
 }
-function upload(){
-document.getElementById('app').innerHTML='<div class="upload"><h2>नई पोस्ट डालें</h2><input type="file" id="photo" accept="image/*"><br><br><input id="caption" placeholder="कुछ लिखें..."><br><br><button onclick="publish()">पोस्ट करें</button><button onclick="home()">वापस</button></div>';
+
+function reels(){
+ alert("ReelG वीडियो Reels फीचर जल्द जोड़ा जाएगा!");
 }
-function publish(){
-let file=document.getElementById('photo').files[0];
-if(!file){alert('पहले फोटो चुनें');return}
-let url=URL.createObjectURL(file);
-let cap=document.getElementById('caption').value;
-document.getElementById('app').innerHTML='<div class="post"><div class="posthead">ReelG User</div><img src="'+url+'"><div class="caption">❤️ '+cap+'</div></div><button onclick="home()">Home</button>';
+
+function profile(){
+ alert("ReelG User\\nआपकी पोस्ट: "+posts.length);
 }
+
+render();
 </script>
 </body>
 </html>
